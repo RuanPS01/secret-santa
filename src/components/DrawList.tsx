@@ -30,7 +30,10 @@ export const DrawList: React.FC = () => {
 
   const handleSelectDraw = async (id: string) => {
     await loadDraw(id);
-    navigate('/reveal');
+    const draw = draws.find(d => d.id === id);
+    const hasAssignments = draw?.participants?.some(p => p.assignedTo);
+
+    navigate(hasAssignments ? '/reveal' : '/setup');
   };
 
   const filteredDraws = draws.filter(draw =>
@@ -47,7 +50,9 @@ export const DrawList: React.FC = () => {
 
   if (!draws?.length) {
     return (
-      <></>
+      <div className="text-center py-8 text-gray-400">
+        <p>Nenhum sorteio encontrado</p>
+      </div>
     );
   }
 
