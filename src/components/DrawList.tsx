@@ -47,9 +47,7 @@ export const DrawList: React.FC = () => {
 
   if (!draws?.length) {
     return (
-      <div className="text-center py-8 text-gray-400">
-        <p>Nenhum sorteio encontrado</p>
-      </div>
+      <></>
     );
   }
 
