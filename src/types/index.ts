@@ -4,6 +4,7 @@ export interface Participant {
   password?: string;
   assignedTo?: string;
   hasSetPassword: boolean;
+  createdAt?: Date;
 }
 
 export interface SecretSanta {
@@ -29,4 +30,5 @@ export interface SecretSantaState {
     password: string
   ) => Participant | undefined;
   reset: () => void;
+  resetDraw: () => Promise<void>;
 }

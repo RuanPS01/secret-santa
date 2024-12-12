@@ -1,10 +1,38 @@
-import { create } from "zustand";
+import { StateCreator, create } from "zustand";
 import { persist } from "zustand/middleware";
 import { SecretSantaState, Participant, SecretSanta } from "../types";
 import { SecretSantaModel, connectDB } from "../lib/db";
 import { generateId, shuffleArray } from "../lib/utils";
 
-export const useSecretSantaStore = create<SecretSantaState>()(
+interface StoreState {
+  currentDraw: SecretSanta | null;
+  draws: SecretSanta[];
+}
+
+interface StoreActions {
+  createDraw: (name: string) => Promise<void>;
+  loadDraw: (id: string) => Promise<void>;
+  addParticipant: (name: string) => Promise<void>;
+  removeParticipant: (id: string) => Promise<void>;
+  setPassword: (participantId: string, password: string) => Promise<void>;
+  shuffleParticipants: () => Promise<void>;
+  verifyPassword: (participantId: string, password: string) => boolean;
+  getAssignment: (participantId: string, password: string) => Participant | undefined;
+  reset: () => void;
+  setDraws: (draws: SecretSanta[]) => void;
+  resetDraw: () => Promise<boolean>;
+}
+
+type Store = StoreState & StoreActions;
+
+type PersistStore = StateCreator<
+  Store,
+  [],
+  [["zustand/persist", Store]],
+  Store
+>;
+
+export const useSecretSantaStore = create<Store>()(
   persist(
     (set, get) => ({
       currentDraw: null,
@@ -113,6 +141,44 @@ export const useSecretSantaStore = create<SecretSantaState>()(
         }));
       },
 
+      resetDraw: async () => {
+        const { currentDraw } = get();
+        if (!currentDraw) return false;
+
+        try {
+          const resetParticipants = currentDraw.participants.map(p => ({
+            id: p.id,
+            name: p.name,
+            hasSetPassword: false,
+            createdAt: p.createdAt
+          }));
+
+          await connectDB();
+          const updated = await SecretSantaModel.findOneAndUpdate(
+            { id: currentDraw.id },
+            { $set: { participants: resetParticipants } }
+          );
+
+          if (!updated) {
+            throw new Error('Failed to update draw');
+          }
+
+          set((state) => ({
+            currentDraw: state.currentDraw
+              ? {
+                  ...state.currentDraw,
+                  participants: resetParticipants,
+                }
+              : null,
+          }));
+
+          return true;
+        } catch (error) {
+          console.error('Error resetting draw:', error);
+          return false;
+        }
+      },
+
       shuffleParticipants: async () => {
         const { currentDraw } = get();
         if (
@@ -180,5 +246,5 @@ export const useSecretSantaStore = create<SecretSantaState>()(
       name: "secret-santa-storage",
       skipHydration: false,
     }
-  )
+  ) as PersistStore
 );
