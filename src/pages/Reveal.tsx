@@ -9,6 +9,8 @@ export const Reveal: React.FC = () => {
   const { resetDraw, currentDraw } = useSecretSantaStore();
 
   const handleReset = async () => {
+    alert('Reset de sorteio desativado temporariamente.');
+    /*
     if (window.confirm('Tem certeza que deseja resetar o sorteio? Todos os participantes serão mantidos, mas precisarão definir novas senhas.')) {
       try {
         const success = await resetDraw();
@@ -22,6 +24,7 @@ export const Reveal: React.FC = () => {
         alert('Ocorreu um erro ao resetar o sorteio. Por favor, tente novamente.');
       }
     }
+    */
   };
 
   const totalParticipants = currentDraw?.participants?.length || 0;
